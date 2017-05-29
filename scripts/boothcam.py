@@ -32,11 +32,11 @@ from constants import SCREEN_W, SCREEN_H, WHITE, BLACK
 FONTSIZE=100
 font = ('Times', FONTSIZE)
 
-def safe_set_led(camera, state):
-    try:
-        camera.led = state
-    except:
-        pass
+#def safe_set_led(camera, state):
+#    try:
+#        camera.led = state
+#    except:
+#        pass
 
 def setup_google():
     global client
@@ -59,42 +59,34 @@ def setup_google():
     return out
 
 def countdown(camera, can, countdown1):
-    camera.start_preview()
-    # camera.start_preview(fullscreen=False,
-    #                     crop=(50, 150, 800, 480),
-    #                      window=(0, 0, 800, 480),
-    #                      hflip=True)
-    can.delete("image")
-    led_state = False
-    safe_set_led(camera, led_state)
+    camera.start_preview(vflip=False)
+    #camera.image_effect = 'cartoon'
+
+    can.delete("image") # changed from "image"
+#    can.update() # added BH
+
     camera.preview_alpha = 100
     camera.preview_window = (0, 0, SCREEN_W, SCREEN_H)
     camera.preview_fullscreen = False
 
     can.delete("all")
+    can.update() # BH added
 
     for i in range(countdown1):
         can.delete("text")
         can.update()
-        can.create_text(SCREEN_W/2 - 0, 200, text=str(countdown1 - i), font=font, tags="text")
+        can.create_text(SCREEN_W/2 - 0, 200, text=str(countdown1 - i), font=font, tags="text", fill="green")
         can.update()
         if i < countdown1 - 2:
             time.sleep(1)
-            led_state = not led_state
-            safe_set_led(camera, led_state)
         else:
             for j in range(5):
                 time.sleep(.2)
-                led_state = not led_state
-                safe_set_led(camera, led_state)
     can.delete("text")
     can.update()
+
     camera.stop_preview()
 
-def setLights(r, g, b):
-#    ser = findser()
-    rgb_command = 'c%s%s%s' % (chr(r), chr(g), chr(b))
-#    ser.write(rgb_command)
 
 def snap(can, countdown1, effect='None'):
     global image_idx
@@ -107,54 +99,57 @@ def snap(can, countdown1, effect='None'):
             command = (['cp', custom.PROC_FILENAME, new_filename])
             call(command)
         camera = mycamera.PiCamera()
+        camera.resolution = (3280,2464)
+        camera.vflip = True
         countdown(camera, can, countdown1)
-        if effect == 'None':
-            camera.capture(custom.RAW_FILENAME, resize=(1366, 768))
-            snapshot = Image.open(custom.RAW_FILENAME)
-        elif effect == 'Warhol': 
-            #  set light to R, take photo, G, take photo, B, take photo, Y, take photo
-            # merge results into one image
-            setLights(255, 0, 0) ## RED
-            camera.capture(custom.RAW_FILENAME[:-4] + '_1.' + custom.EXT, resize=(683, 384))
-            setLights(0, 255, 0) ## GREEN
-            camera.capture(custom.RAW_FILENAME[:-4] + '_2.' + custom.EXT, resize=(683, 384))
-            setLights(0, 0, 255) ## BLUE
-            camera.capture(custom.RAW_FILENAME[:-4] + '_3.' + custom.EXT, resize=(683, 384))
-            setLights(180, 180, 0) ## yellow of same intensity
-            camera.capture(custom.RAW_FILENAME[:-4] + '_4.' + custom.EXT, resize=(683, 384))
-
-            snapshot = Image.new('RGBA', (1366, 768))
-            snapshot.paste(Image.open(custom.RAW_FILENAME[:-4] + '_1.' + custom.EXT).resize((683, 384)), (  0,   0,  683, 384))
-            snapshot.paste(Image.open(custom.RAW_FILENAME[:-4] + '_2.' + custom.EXT).resize((683, 384)), (683,   0, 1366, 384))
-            snapshot.paste(Image.open(custom.RAW_FILENAME[:-4] + '_3.' + custom.EXT).resize((683, 384)), (  0, 384,  683, 768))
-            snapshot.paste(Image.open(custom.RAW_FILENAME[:-4] + '_4.' + custom.EXT).resize((683, 384)), (683, 384, 1366, 768))
-        elif effect == "Four":
+#        if effect == 'None':
+#            camera.capture(custom.RAW_FILENAME, resize=None)
+#            snapshot = Image.open(custom.RAW_FILENAME)
+#       elif effect == 'Warhol': 
+#            #  set light to R, take photo, G, take photo, B, take photo, Y, take photo
+#            # merge results into one image
+#            setLights(255, 0, 0) ## RED
+#            camera.capture(custom.RAW_FILENAME[:-4] + '_1.' + custom.EXT, resize=(1640, 1232))
+#            setLights(0, 255, 0) ## GREEN
+#            camera.capture(custom.RAW_FILENAME[:-4] + '_2.' + custom.EXT, resize=(1640, 1232))
+#            setLights(0, 0, 255) ## BLUE
+#            camera.capture(custom.RAW_FILENAME[:-4] + '_3.' + custom.EXT, resize=(1640, 1232))
+#            setLights(180, 180, 0) ## yellow of same intensity
+#            camera.capture(custom.RAW_FILENAME[:-4] + '_4.' + custom.EXT, resize=(1640, 1232))
+#            snapshot = Image.new('RGBA', (3280, 2464))
+#            snapshot.paste(Image.open(custom.RAW_FILENAME[:-4] + '_1.' + custom.EXT).resize((1640, 1232)), (  0,   0,  1640, 1232))
+#            snapshot.paste(Image.open(custom.RAW_FILENAME[:-4] + '_2.' + custom.EXT).resize((1640, 1232)), (1640,   0, 3280, 1232))
+#            snapshot.paste(Image.open(custom.RAW_FILENAME[:-4] + '_3.' + custom.EXT).resize((1640, 1232)), (  0, 1232,  1640, 2464))
+#            snapshot.paste(Image.open(custom.RAW_FILENAME[:-4] + '_4.' + custom.EXT).resize((1640, 1232)), (1640, 1232, 3280, 2464))
+        if effect == "Four":
             # take 4 photos and merge into one image.
-            camera.capture(custom.RAW_FILENAME[:-4] + '_1.' + custom.EXT, resize=(683, 384))
+            camera.capture(custom.RAW_FILENAME[:-4] + '_1.' + custom.EXT, resize=(1640, 1232))
             countdown(camera, can, custom.countdown2)
-            camera.capture(custom.RAW_FILENAME[:-4] + '_2.' + custom.EXT, resize=(683, 384))
+            camera.capture(custom.RAW_FILENAME[:-4] + '_2.' + custom.EXT, resize=(1640, 1232))
             countdown(camera, can, custom.countdown2)
-            camera.capture(custom.RAW_FILENAME[:-4] + '_3.' + custom.EXT, resize=(683, 384))
+            camera.capture(custom.RAW_FILENAME[:-4] + '_3.' + custom.EXT, resize=(1640, 1232))
             countdown(camera, can, custom.countdown2)
-            camera.capture(custom.RAW_FILENAME[:-4] + '_4.' + custom.EXT, resize=(683, 384))
+            camera.capture(custom.RAW_FILENAME[:-4] + '_4.' + custom.EXT, resize=(1640, 1232))
+            snapshot = Image.new('RGBA', (3280, 2464))
+            snapshot.paste(Image.open(custom.RAW_FILENAME[:-4] + '_1.' + custom.EXT).resize((1640, 1232)), (  0,   0,  1640, 1232))
+            snapshot.paste(Image.open(custom.RAW_FILENAME[:-4] + '_2.' + custom.EXT).resize((1640, 1232)), (1640,   0, 3280, 1232))
+            snapshot.paste(Image.open(custom.RAW_FILENAME[:-4] + '_3.' + custom.EXT).resize((1640, 1232)), (  0, 1232,  1640, 2464))
+            snapshot.paste(Image.open(custom.RAW_FILENAME[:-4] + '_4.' + custom.EXT).resize((1640, 1232)), (1640, 1232, 3280, 2464))
+        elif effect == "None":
+            camera.capture(custom.RAW_FILENAME, resize=None)
+            snapshot=Image.open(custom.RAW_FILENAME)
 
-            snapshot = Image.new('RGBA', (1366, 768))
-            snapshot.paste(Image.open(custom.RAW_FILENAME[:-4] + '_1.' + custom.EXT).resize((683, 384)), (  0,   0,  683, 384))
-            snapshot.paste(Image.open(custom.RAW_FILENAME[:-4] + '_2.' + custom.EXT).resize((683, 384)), (683,   0, 1366, 384))
-            snapshot.paste(Image.open(custom.RAW_FILENAME[:-4] + '_3.' + custom.EXT).resize((683, 384)), (  0, 384,  683, 768))
-            snapshot.paste(Image.open(custom.RAW_FILENAME[:-4] + '_4.' + custom.EXT).resize((683, 384)), (683, 384, 1366, 768))
-            
         camera.close()
-            
     
         if custom.logo is not None:
-            # snapshot.paste(logo,(0,SCREEN_H -lysize ),logo)
-            # snapshot.paste(custom.logo,(SCREEN_W/2 - custom.logo.size[0]/2,
-            #                             SCREEN_H -custom.lysize ),
-            #                             custom.logo)
             size = snapshot.size
             logo_size = custom.logo.size
-            yoff = size[1] - logo_size[1]
+
+            if effect == "None":
+                yoff = size[1] - logo_size[1]
+            else:
+                yoff = (size[1] - logo_size[1]) // 2 # changed
+
             xoff = (size[0] - logo_size[0]) // 2
             snapshot.paste(custom.logo,(xoff, yoff),
                            custom.logo)
@@ -175,13 +170,13 @@ if custom.ARCHIVE: ### commented out... use custom.customizer instead
         os.mkdir(custom.archive_dir)
     image_idx = len(glob.glob(os.path.join(custom.archive_dir, '%s_*.%s' % (custom.PROC_FILENAME[:-4], custom.EXT))))
 
-SERIAL = None
-def findser():
-    global SERIAL
-    if SERIAL is None: ## singleton
-        SERIAL = serial.Serial('/dev/ttyS0',19200, timeout=.1)
-        print 'using AlaMode'
-    return SERIAL
+#SERIAL = None
+#def findser():
+#    global SERIAL
+#    if SERIAL is None: ## singleton
+#        SERIAL = serial.Serial('/dev/ttyS0',19200, timeout=.1)
+#        print 'using AlaMode'
+#    return SERIAL
 
 
 def googleUpload(filen):
